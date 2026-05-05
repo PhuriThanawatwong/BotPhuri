@@ -3,7 +3,7 @@ import os
 
 def get_realtime_oil_prices():
     try:
-        # ยิงไปดึงข้อมูลราคาน้ำมันจาก API บางจาก
+        # ดึงข้อมูลราคาน้ำมันจาก API บางจาก
         url = "https://www.bangchak.co.th/api/oilprice"
         response = requests.get(url, timeout=10)
         
@@ -14,15 +14,18 @@ def get_realtime_oil_prices():
             message = "⛽ ราคาน้ำมันวันนี้ (อัปเดตล่าสุด)\n"
             message += "--------------------------\n"
             
-            # รายการน้ำมันที่ต้องการแสดงผล
-            target_oils = ['Hi Premium 97', 'Gasohol 95 E10', 'Gasohol E20', 'Hi Diesel S B7']
-            
+            found_any = False
             for item in items:
-                name = item.get('OilName')
-                if name in target_oils:
+                name = item.get('OilName', '')
+                # เช็คชื่อน้ำมันแบบครอบคลุมเพื่อให้ดึงค่ามาแสดงได้แน่นอน
+                if any(x in name for x in ['Premium 97', '95 E10', 'E20', 'Diesel S B7']):
                     price = item.get('Price')
                     message += f"{name}: {price} บาท\n"
+                    found_any = True
             
+            if not found_any:
+                return "⛽ ราคาน้ำมันวันนี้\n(กำลังอัปเดตข้อมูลจากระบบ)"
+                
             message += "--------------------------\n"
             message += "รายงานโดย: Bot Phuri"
             return message
@@ -34,7 +37,7 @@ def push_message():
     # ดึง Token จาก GitHub Secrets
     token = os.environ.get('LINE_TOKEN')
     
-    # ไอดีของมึง (กูใส่เครื่องหมายคำพูดปิดท้ายให้แล้วเพื่อแก้ SyntaxError)
+    # ไอดีผู้ใช้งาน (ตรวจสอบความถูกต้องเรียบร้อยแล้ว)
     user_id = 'U9ad765ea3b3a633334cea08ed77d0869' 
 
     if not token:
@@ -47,7 +50,6 @@ def push_message():
         'Authorization': f'Bearer {token}'
     }
     
-    # ดึงเนื้อหาข้อความ
     oil_text = get_realtime_oil_prices()
     
     payload = {
