@@ -3,7 +3,7 @@ import os
 
 def get_oil_price():
     # ใช้ API กลางที่รวมราคาน้ำมันทุกยี่ห้อ
-    url = "http://www.eppo.go.th/index.php/th/petroleum/price/oil-price"
+    url = "https://api.chnwt.dev/thai-oil-api/latest"
     try:
         response = requests.get(url, timeout=20)
         response.raise_for_status()
@@ -12,7 +12,7 @@ def get_oil_price():
         # เปลี่ยนจาก 'bangchak' เป็น 'ptt' เพื่อดึงข้อมูลของ ปตท.
         ptt = data['price']['ptt']
         
-        message = "⛽️ ราคาน้ำมัน วันนี้\n"
+        message = "⛽️ ราคาน้ำมัน ปตท. วันนี้\n"
         message += "------------------\n"
         for type, price in ptt.items():
             # กรองเฉพาะประเภทที่มีราคา (บางรายการอาจเป็น null หรือไม่มีข้อมูล)
