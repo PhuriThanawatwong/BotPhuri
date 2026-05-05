@@ -1,52 +1,31 @@
 import requests
 import os
 
-def get_flex_message():
-    url = "https://api-v2.bangchak.co.th/api/oilprice"
-    try:
-        response = requests.get(url, timeout=20)
-        data = response.json()
-        items = data['data']['items']
-        
-        oil_list = []
-        # เลือกยี่ห้อน้ำมันที่มึงอยากให้โชว์ (เพิ่มได้ตามใจชอบ)
-        target = ['Hi Premium 97', 'Gasohol 95 E10', 'Gasohol 91 E10', 'Gasohol E20', 'Hi Diesel S B7']
-        
-        for item in items:
-            if item['type'] in target:
-                oil_list.append({
-                    "type": "box",
-                    "layout": "horizontal",
-                    "contents": [
-                        {"type": "text", "text": item['type'], "size": "sm", "color": "#555555", "flex": 3},
-                        {"type": "text", "text": f"{item['price']} บาท", "size": "sm", "weight": "bold", "color": "#111111", "align": "end", "flex": 2}
-                    ]
-                })
-
-        return {
-            "type": "bubble",
-            "header": {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [{"type": "text", "text": "⛽️ ราคาน้ำมันวันนี้", "weight": "bold", "size": "xl", "color": "#FFFFFF"}],
-                "backgroundColor": "#00B900"
-            },
-            "body": {"type": "box", "layout": "vertical", "contents": oil_list, "spacing": "md"},
-            "footer": {"type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "แหล่งข้อมูล: บางจาก", "size": "xs", "color": "#aaaaaa", "align": "center"}]}
-        }
-    except:
-        return None
-
-def broadcast_flex(token):
-    flex_content = get_flex_message()
-    if not flex_content: return
-    
+def broadcast_test(token):
+    # ยิงข้อความตรงๆ เข้า LINE เพื่อเช็คว่า Token ยังขลังอยู่มั้ย
     url = "https://api.line.me/v2/bot/message/broadcast"
-    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
-    payload = {"messages": [{"type": "flex", "altText": "เช็คราคาน้ำมัน", "contents": flex_content}]}
-    requests.post(url, headers=headers, json=payload)
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}"
+    }
+    # ลองดึงราคาน้ำมันจริง
+    try:
+        res_oil = requests.get("https://api-v2.bangchak.co.th/api/oilprice", timeout=15)
+        data = res_oil.json()
+        items = data['data']['items']
+        msg = "⛽️ ราคาน้ำมันมาแล้วเว้ยภูริ!\n"
+        for item in items[:5]: # เอามาโชว์ 5 ตัวพอเป็นพิธี
+            msg += f"🔹 {item['type']}: {item['price']} บาท\n"
+    except Exception as e:
+        msg = f"⚠️ ดึงราคาไม่ได้แต่บอทยังไม่ตายนะ: {str(e)}"
+
+    payload = {"messages": [{"type": "text", "text": msg}]}
+    response = requests.post(url, headers=headers, json=payload)
+    print(f"LINE Response: {response.status_code} - {response.text}")
 
 if __name__ == "__main__":
     token = os.getenv('LINE_TOKEN')
     if token:
-        broadcast_flex(token)
+        broadcast_test(token)
+    else:
+        print("❌ มึงลืมใส่ LINE_TOKEN ใน GitHub Secrets หรือเปล่า?")
