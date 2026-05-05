@@ -3,7 +3,7 @@ import os
 
 def push_message():
     # ดึงค่าจาก GitHub Secrets ที่มึงต้องไปตั้งชื่อให้ตรงกันนะเพื่อน
-    token = os.environ.get('CHANNEL_ACCESS_TOKEN') 
+    token = os.environ.get('LINE_TOKEN') 
     user_id = os.environ.get('USER_ID') 
 
     url = "https://api.line.me/v2/bot/message/push"
