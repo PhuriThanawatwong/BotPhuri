@@ -2,14 +2,12 @@ import requests
 import os
 
 def get_flex_message():
-    # ข้อมูลจำลอง (Mock Data) เพื่อเช็คความสวย 100%
     mock_items = [
         {"type": "Hi Premium 97", "price": "49.84"},
         {"type": "Gasohol 95 E10", "price": "38.55"},
         {"type": "Gasohol E20", "price": "36.44"},
         {"type": "Hi Diesel S B7", "price": "32.94"}
     ]
-    
     oil_contents = []
     for item in mock_items:
         oil_contents.append({
@@ -21,7 +19,6 @@ def get_flex_message():
                 {"type": "text", "text": "บ.", "size": "sm", "color": "#aaaaaa", "align": "end", "flex": 1}
             ]
         })
-
     return {
         "type": "bubble",
         "hero": {
@@ -59,4 +56,4 @@ def broadcast(token):
 if __name__ == "__main__":
     token = os.getenv('LINE_TOKEN')
     if token:
-        broadcast(token)​
+        broadcast(token)
