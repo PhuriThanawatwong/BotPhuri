@@ -7,8 +7,7 @@ def get_oil_price():
         response = requests.get(url, timeout=20)
         data = response.json()
         items = data['data']['items']
-        msg = "⛽️ ราคาน้ำมันบางจากวันนี้\n"
-        msg += "------------------\n"
+        msg = "⛽️ รายงานราคาน้ำมันบางจากวันนี้\n------------------\n"
         target = ['Hi Premium 97', 'Gasohol 95 E10', 'Gasohol E20', 'Hi Diesel B20']
         for item in items:
             if item['type'] in target:
@@ -28,6 +27,5 @@ if __name__ == "__main__":
     report = get_oil_price()
     if token:
         broadcast(token, report)
-        print("Done")
     else:
-        print("No Token found")​
+        print("No Token")
