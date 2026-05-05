@@ -3,7 +3,7 @@ import os
 
 def get_oil_price():
     # ใช้ API กลางที่รวมราคาน้ำมันทุกยี่ห้อ
-    url = "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bangchak.co.th/th/oilprice&ved=2ahUKEwiVptCQ36GUAxXvqVYBHSabD8QQFnoECEUQAQ&sqi=2&usg=AOvVaw3IKd_CzYyk3Jpn2jEg3Hna"
+    url = "http://www.eppo.go.th/index.php/th/petroleum/price/oil-price"
     try:
         response = requests.get(url, timeout=20)
         response.raise_for_status()
@@ -12,7 +12,7 @@ def get_oil_price():
         # เปลี่ยนจาก 'bangchak' เป็น 'ptt' เพื่อดึงข้อมูลของ ปตท.
         ptt = data['price']['ptt']
         
-        message = "⛽️ ราคาน้ำมัน ปตท. วันนี้\n"
+        message = "⛽️ ราคาน้ำมัน วันนี้\n"
         message += "------------------\n"
         for type, price in ptt.items():
             # กรองเฉพาะประเภทที่มีราคา (บางรายการอาจเป็น null หรือไม่มีข้อมูล)
@@ -40,4 +40,4 @@ if ACCESS_TOKEN:
     print("ส่งข้อมูลราคาน้ำมัน ปตท. เรียบร้อยแล้ว!")
 else:
     print("ไม่พบ LINE_TOKEN ใน Environment Variable")
-    print(report) # แสดงผลใน Terminal แทนถ้าไม่มี Token​
+    print(report) # แสดงผลใน Terminal แทนถ้าไม่มี Token
