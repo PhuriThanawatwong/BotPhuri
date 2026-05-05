@@ -2,25 +2,32 @@ import requests
 import os
 
 def get_oil_price():
-    # ใช้ API กลางที่รวมราคาน้ำมันทุกยี่ห้อ
-    url = "https://api.chnwt.dev/thai-oil-api/latest"
+    # ใช้ API ตรงของบางจาก เสถียรกว่า API รวมที่มึงใช้แล้วล่มอยู่ตอนนี้
+    url = "https://api-v2.bangchak.co.th/api/oilprice"
     try:
         response = requests.get(url, timeout=20)
         response.raise_for_status()
         data = response.json()
         
-        # เปลี่ยนจาก 'bangchak' เป็น 'ptt' เพื่อดึงข้อมูลของ ปตท.
-        ptt = data['price']['ptt']
+        # เจาะเข้าโครงสร้างข้อมูลของบางจาก
+        items = data['data']['items']
         
-        message = "⛽️ ราคาน้ำมัน ปตท. วันนี้\n"
+        message = "⛽️ ราคาน้ำมันบางจากวันนี้\n"
         message += "------------------\n"
-        for type, price in ptt.items():
-            # กรองเฉพาะประเภทที่มีราคา (บางรายการอาจเป็น null หรือไม่มีข้อมูล)
-            if price:
-                message += f"⛽️ {type}: {price} บาท\n"
+        
+        # กรองเอาเฉพาะตัวหลักๆ ที่คนใช้เยอะ
+        target_oil = ['Hi Premium 97', 'Gasohol 95 E10', 'Gasohol E20', 'Hi Diesel B20']
+        
+        for item in items:
+            if item['type'] in target_oil:
+                name = item['type']
+                price = item['price']
+                message += f"🔹 {name}: {price} บาท\n"
+        
         return message
     except Exception as e:
-        return f"❌ ระบบดึงข้อมูลขัดข้องชั่วคราว: {str(e)}"
+        # ถ้า Error ให้บอกรายละเอียดชัดๆ จะได้แก้ถูก
+        return f"❌ ดึงข้อมูลไม่ได้: {str(e)}"
 
 def broadcast_to_line(token, text_message):
     line_url = "https://api.line.me/v2/bot/message/broadcast"
@@ -29,15 +36,19 @@ def broadcast_to_line(token, text_message):
         "Authorization": f"Bearer {token}"
     }
     payload = {"messages": [{"type": "text", "text": text_message}]}
-    requests.post(line_url, headers=headers, json=payload)
+    res = requests.post(line_url, headers=headers, json=payload)
+    return res.status_code
 
-# ส่วนการรันโปรแกรม
+# ส่วนรันโปรแกรมบน GitHub Actions
 ACCESS_TOKEN = os.getenv('LINE_TOKEN')
 report = get_oil_price()
 
 if ACCESS_TOKEN:
-    broadcast_to_line(ACCESS_TOKEN, report)
-    print("ส่งข้อมูลราคาน้ำมัน ปตท. เรียบร้อยแล้ว!")
+    status = broadcast_to_line(ACCESS_TOKEN, report)
+    if status == 200:
+        print("✅ ส่งข้อมูลเรียบร้อย!")
+    else:
+        print(f"❌ ส่งไม่สำเร็จ Code: {status}")
 else:
-    print("ไม่พบ LINE_TOKEN ใน Environment Variable")
-    print(report) # แสดงผลใน Terminal แทนถ้าไม่มี Token
+    print("⚠️ ไม่พบ LINE_TOKEN (ไปตั้งค่าใน GitHub Secrets ด้วยนะ)")
+    print(report)​
