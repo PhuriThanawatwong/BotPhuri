@@ -3,54 +3,57 @@ import os
 
 def get_realtime_oil_prices():
     try:
-        # ดึงข้อมูลจาก API บางจาก
+        # ดึงข้อมูลจาก API บางจากโดยตรง
         url = "https://www.bangchak.co.th/api/oilprice"
         response = requests.get(url, timeout=15)
         
         if response.status_code == 200:
-            data = response.json()
-            # เข้าถึงชั้นข้อมูล items ที่เก็บรายละเอียดราคาน้ำมัน
-            items = data.get('data', {}).get('items', [])
+            res_json = response.json()
+            # โครงสร้าง API อยู่ใน data -> items
+            items = res_json.get('data', {}).get('items', [])
             
             message = "⛽ ราคาน้ำมันวันนี้ (อัปเดตล่าสุด)\n"
             message += "--------------------------\n"
             
-            # กำหนด Keyword ที่ใช้ค้นหาและชื่อที่ต้องการแสดงผล
-            oil_types = {
+            # ตั้งค่าชื่อที่จะแสดงผลคู่กับ Keyword ที่ค้นหาใน API
+            oil_map = {
                 'Premium 97': 'Hi Premium 97',
-                '95 E10': 'Gasohol 95',
-                'E20': 'Gasohol E20',
-                'Diesel S B7': 'Hi Diesel B7'
+                '95 S EVO': 'Gasohol 95',
+                'E20 S EVO': 'Gasohol E20',
+                'ไฮดีเซล S B7': 'Hi Diesel B7'
             }
             
-            found_list = []
-            for item in items:
-                oil_name = item.get('OilName', '')
-                for key, display in oil_types.items():
-                    if key in oil_name:
-                        # ดึงราคาปัจจุบัน
-                        price = item.get('Price')
-                        if price is not None:
-                            found_list.append(f"{display}: {price} บาท")
+            found_count = 0
+            # วนลูปเช็คข้อมูลน้ำมันทีละตัว
+            for display_name in oil_map.values():
+                for item in items:
+                    api_oil_name = item.get('OilName', '')
+                    # ตรวจสอบว่าชื่อน้ำมันใน API ตรงกับที่เราต้องการไหม
+                    if any(key in api_oil_name for key in oil_map.keys() if oil_map[key] == display_name):
+                        # ดึงราคาจากฟิลด์ Pricetoday ตามโครงสร้าง API จริง
+                        price = item.get('Pricetoday')
+                        if price:
+                            message += f"{display_name}: {price} บาท\n"
+                            found_count += 1
+                            break # เจอแล้วไปหาตัวถัดไป
             
-            if found_list:
-                message += "\n".join(found_list)
-            else:
-                message += "ขออภัย กำลังปรับปรุงข้อมูลในระบบ"
+            if found_count == 0:
+                return "⛽ ระบบกำลังรอการอัปเดตข้อมูลราคาน้ำมัน"
                 
-            message += "\n--------------------------\n"
+            message += "--------------------------\n"
             message += "รายงานโดย: Bot Phuri"
             return message
-        return "❌ ไม่สามารถเชื่อมต่อข้อมูลได้"
+        return "❌ ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้"
     except Exception as e:
-        return f"❌ ข้อผิดพลาด: {str(e)}"
+        return f"❌ เกิดข้อผิดพลาด: {str(e)}"
 
 def push_message():
     token = os.environ.get('LINE_TOKEN')
-    # ยืนยัน ID ผู้ใช้งานที่ถูกต้อง
+    # ยืนยันไอดีผู้ใช้ของคุณภูริ (33 ตัวอักษร)
     user_id = 'U9ad765ea3b3a633334cea08ed77d0869' 
 
     if not token:
+        print("Error: LINE_TOKEN not found.")
         return
 
     url = "https://api.line.me/v2/bot/message/push"
@@ -66,7 +69,8 @@ def push_message():
         "messages": [{"type": "text", "text": oil_text}]
     }
 
-    requests.post(url, headers=headers, json=payload)
+    res = requests.post(url, headers=headers, json=payload)
+    print(f"Status Code: {res.status_code}")
 
 if __name__ == "__main__":
     push_message()
