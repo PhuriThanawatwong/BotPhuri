@@ -5,46 +5,49 @@ def get_realtime_oil_prices():
     try:
         # ดึงข้อมูลจาก API บางจาก
         url = "https://www.bangchak.co.th/api/oilprice"
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=15)
         
         if response.status_code == 200:
             data = response.json()
+            # เข้าถึงชั้นข้อมูล items ที่เก็บรายละเอียดราคาน้ำมัน
             items = data.get('data', {}).get('items', [])
             
             message = "⛽ ราคาน้ำมันวันนี้ (อัปเดตล่าสุด)\n"
             message += "--------------------------\n"
             
-            # ตั้งค่าคำสำคัญเพื่อค้นหาน้ำมันที่ต้องการ
-            targets = {
+            # กำหนด Keyword ที่ใช้ค้นหาและชื่อที่ต้องการแสดงผล
+            oil_types = {
                 'Premium 97': 'Hi Premium 97',
                 '95 E10': 'Gasohol 95',
                 'E20': 'Gasohol E20',
                 'Diesel S B7': 'Hi Diesel B7'
             }
             
-            found_data = []
+            found_list = []
             for item in items:
                 oil_name = item.get('OilName', '')
-                for key, display_name in targets.items():
+                for key, display in oil_types.items():
                     if key in oil_name:
+                        # ดึงราคาปัจจุบัน
                         price = item.get('Price')
-                        found_data.append(f"{display_name}: {price} บาท")
+                        if price is not None:
+                            found_list.append(f"{display}: {price} บาท")
             
-            if found_data:
-                # เรียงข้อมูลและรวมเข้าด้วยกัน
-                message += "\n".join(found_data)
+            if found_list:
+                message += "\n".join(found_list)
             else:
-                message += "ขออภัย ระบบกำลังปรับปรุงฐานข้อมูล"
+                message += "ขออภัย กำลังปรับปรุงข้อมูลในระบบ"
                 
             message += "\n--------------------------\n"
             message += "รายงานโดย: Bot Phuri"
             return message
         return "❌ ไม่สามารถเชื่อมต่อข้อมูลได้"
     except Exception as e:
-        return f"❌ เกิดข้อผิดพลาด: {str(e)}"
+        return f"❌ ข้อผิดพลาด: {str(e)}"
 
 def push_message():
     token = os.environ.get('LINE_TOKEN')
+    # ยืนยัน ID ผู้ใช้งานที่ถูกต้อง
     user_id = 'U9ad765ea3b3a633334cea08ed77d0869' 
 
     if not token:
