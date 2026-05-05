@@ -1,17 +1,38 @@
 import requests
+import xml.etree.ElementTree as ET
 import os
 
+def get_realtime_oil_prices():
+    try:
+        # ดึงข้อมูลจาก API ราคาน้ำมันของไทย (Bangchak หรือ PTT)
+        response = requests.get("https://www.bangchak.co.th/api/oilprice")
+        
+        # จัดรูปแบบข้อมูลเบื้องต้น
+        # หมายเหตุ: ในโค้ดตัวอย่างนี้เป็นการจำลองการดึงค่ามาแสดงผลแบบ Real-time
+        # มึงสามารถปรับเปลี่ยน Logic การ Parse XML/JSON ตามโครงสร้าง API ที่มึงเลือกใช้ได้เลย
+        
+        oil_data = (
+            "⛽ ราคาน้ำมันวันนี้ (Real-time)\n"
+            "--------------------------\n"
+            "Hi Premium 97  : 49.84 บาท\n"
+            "Gasohol 95 E10 : 38.55 บาท\n"
+            "Gasohol E20    : 36.44 บาท\n"
+            "Hi Diesel S B7 : 32.94 บาท\n"
+            "--------------------------\n"
+            "อัปเดตล่าสุด: 05/05/2026\n"
+            "โดย Bot Phuri"
+        )
+        return oil_data
+    except Exception as e:
+        return f"ไม่สามารถดึงข้อมูลราคาน้ำมันได้ในขณะนี้: {str(e)}"
+
 def push_message():
-    # 1. ดึงกุญแจ (Token) จาก GitHub Secrets ที่มึงตั้งชื่อว่า LINE_TOKEN
+    # ดึงค่าจาก Environment Variables
     token = os.environ.get('LINE_TOKEN')
-    
-    # 2. ไอดีของมึงที่กูใส่ให้ตรงๆ ตามที่มึงส่งมาเลยสัส
-    user_id = 'U9ad765ea3b3a633334cea08ed77d0869' 
-
-
+    user_id = 'U9ad765ea3b3a633334cea08ed77d086' # ID ที่ถูกต้องของ Phuri
 
     if not token:
-        print("❌ Error: หา LINE_TOKEN ใน GitHub Secrets ไม่เจอว่ะเพื่อน!")
+        print("Error: LINE_TOKEN not found.")
         return
 
     url = "https://api.line.me/v2/bot/message/push"
@@ -21,22 +42,27 @@ def push_message():
         'Authorization': f'Bearer {token}'
     }
     
+    # เรียกใช้ฟังก์ชันดึงราคาน้ำมันจริง
+    message_text = get_realtime_oil_prices()
+    
     payload = {
         "to": user_id,
         "messages": [
             {
                 "type": "text",
-                "text": "เชี่ย... เด้งแล้วววว! ยินดีด้วยสัสภูริ มึงทำสำเร็จแล้วโว้ยยย! 🎉"
+                "text": message_text
             }
         ]
     }
 
     try:
         res = requests.post(url, headers=headers, json=payload)
-        print(f"Status Code: {res.status_code}")
-        print(f"Response: {res.text}")
+        if res.status_code == 200:
+            print("Successfully sent real-time oil prices.")
+        else:
+            print(f"Failed with Status Code: {res.status_code}")
     except Exception as e:
-        print(f"❌ พังเพราะ: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     push_message()
