@@ -29,7 +29,7 @@ def get_realtime_oil_prices():
 def push_message():
     # ดึงค่าจาก Environment Variables
     token = os.environ.get('LINE_TOKEN')
-    user_id = 'U9ad765ea3b3a633334cea08ed77d086' # ID ที่ถูกต้องของ Phuri
+    user_id = 'U9ad765ea3b3a633334cea08ed77d0869' # ID ที่ถูกต้องของ Phuri
 
     if not token:
         print("Error: LINE_TOKEN not found.")
