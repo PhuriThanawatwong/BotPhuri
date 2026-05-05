@@ -17,4 +17,5 @@ jobs:
       - name: Run Script
         env:
           LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          USER_ID: ${{ secrets.USER_ID }}
         run: python Botphuri.py
