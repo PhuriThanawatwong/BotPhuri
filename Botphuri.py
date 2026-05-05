@@ -3,18 +3,16 @@ import os
 
 def get_realtime_oil_prices():
     try:
-        # ดึงข้อมูลจาก API บางจากโดยตรง
         url = "https://www.bangchak.co.th/api/oilprice"
         response = requests.get(url, timeout=15)
         
         if response.status_code == 200:
             res_json = response.json()
-            items = res_json.get('data', {}).get('items', []) #
+            items = res_json.get('data', {}).get('items', [])
             
             message = "⛽ ราคาน้ำมันวันนี้ (อัปเดตล่าสุด)\n"
             message += "--------------------------\n"
             
-            # ก๊อปชื่อมาจาก API ของบางจากแบบเป๊ะๆ ทุกตัวอักษร
             oil_targets = {
                 'ไฮพรีเมียม 97 แก๊สโซฮอล์ 95++': 'Hi Premium 97',
                 'แก๊สโซฮอล์ 95 S EVO': 'Gasohol 95',
@@ -26,14 +24,14 @@ def get_realtime_oil_prices():
             for item in items:
                 api_name = item.get('OilName', '')
                 if api_name in oil_targets:
-                    price = item.get('Pricetoday') # ดึงราคาปัจจุบัน
+                    price = item.get('Pricetoday')
                     if price:
                         found_data.append(f"{oil_targets[api_name]}: {price} บาท")
             
             if found_data:
                 message += "\n".join(found_data)
             else:
-                message += "ขออภัย กำลังดึงข้อมูลจากระบบบางจาก"
+                message += "ขออภัย ระบบกำลังอัปเดตข้อมูล"
                 
             message += "\n--------------------------\n"
             message += "รายงานโดย: Bot Phuri"
@@ -44,7 +42,7 @@ def get_realtime_oil_prices():
 
 def push_message():
     token = os.environ.get('LINE_TOKEN')
-    user_id = 'U9ad765ea3b3a633334cea08ed77d0869' #
+    user_id = 'U9ad765ea3b3a633334cea08ed77d0869'
 
     if not token:
         return
@@ -65,4 +63,4 @@ def push_message():
     requests.post(url, headers=headers, json=payload)
 
 if __name__ == "__main__":
-    push_message()​
+    push_message()
