@@ -1,42 +1,60 @@
 import requests
-import xml.etree.ElementTree as ET
 import os
+import json
 
 def get_realtime_oil_prices():
     try:
-        # ดึงข้อมูลจาก API ราคาน้ำมันของไทย (Bangchak หรือ PTT)
-        response = requests.get("https://www.bangchak.co.th/api/oilprice")
+        # ดึงข้อมูลจาก API บางจาก (Bangchak)
+        url = "https://www.bangchak.co.th/api/oilprice"
+        response = requests.get(url, timeout=10)
         
-        # จัดรูปแบบข้อมูลเบื้องต้น
-        # หมายเหตุ: ในโค้ดตัวอย่างนี้เป็นการจำลองการดึงค่ามาแสดงผลแบบ Real-time
-        # มึงสามารถปรับเปลี่ยน Logic การ Parse XML/JSON ตามโครงสร้าง API ที่มึงเลือกใช้ได้เลย
-        
-        oil_data = (
-            "⛽ ราคาน้ำมันวันนี้ (Real-time)\n"
-            "--------------------------\n"
-            "Hi Premium 97  : 49.84 บาท\n"
-            "Gasohol 95 E10 : 38.55 บาท\n"
-            "Gasohol E20    : 36.44 บาท\n"
-            "Hi Diesel S B7 : 32.94 บาท\n"
-            "--------------------------\n"
-            "อัปเดตล่าสุด: 05/05/2026\n"
-            "โดย Bot Phuri"
-        )
-        return oil_data
+        if response.status_code == 200:
+            data = response.json()
+            # ค้นหาราคาน้ำมันจากรายการที่ได้
+            items = data.get('data', {}).get('items', [])
+            
+            message = "⛽ ราคาน้ำมันวันนี้ (อัปเดตล่าสุด)\n"
+            message += "--------------------------\n"
+            
+            # ดึงเฉพาะตัวหลักๆ ที่มึงใช้
+            target_oils = {
+                'Hi Premium 97': 'Hi Premium 97',
+                'Gasohol 95 E10': 'Gasohol 95 E10',
+                'Gasohol E20': 'Gasohol E20',
+                'Hi Diesel S B7': 'Hi Diesel S B7'
+            }
+            
+            found_any = False
+            for item in items:
+                oil_name = item.get('OilName')
+                if oil_name in target_oils:
+                    price = item.get('Price')
+                    message += f"{oil_name}: {price} บ.\n"
+                    found_any = True
+            
+            if not found_any:
+                return "❌ ไม่พบข้อมูลราคาน้ำมันที่ระบุ"
+                
+            message += "--------------------------\n"
+            message += "ข้อมูลจาก: Bangchak API\n"
+            message += "รายงานโดย: Bot Phuri"
+            return message
+        else:
+            return "❌ ดึงข้อมูลจาก API ไม่สำเร็จ (Status Code ไม่ใช่ 200)"
+            
     except Exception as e:
-        return f"ไม่สามารถดึงข้อมูลราคาน้ำมันได้ในขณะนี้: {str(e)}"
+        return f"❌ เกิดข้อผิดพลาดในการดึงข้อมูล: {str(e)}"
 
 def push_message():
-    # ดึงค่าจาก Environment Variables
     token = os.environ.get('LINE_TOKEN')
-    user_id = 'U9ad765ea3b3a633334cea08ed77d0869' # ID ที่ถูกต้องของ Phuri
+    # ใช้ ID ของมึงที่เช็คแล้วว่าครบ 33 ตัว
+    user_id = 'U9ad765ea3b3a633334cea08ed77d086' 
 
     if not token:
         print("Error: LINE_TOKEN not found.")
         return
 
     url = "https://api.line.me/v2/bot/message/push"
-    
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {token}'
@@ -47,20 +65,13 @@ def push_message():
     
     payload = {
         "to": user_id,
-        "messages": [
-            {
-                "type": "text",
-                "text": message_text
-            }
-        ]
+        "messages": [{"type": "text", "text": message_text}]
     }
 
     try:
         res = requests.post(url, headers=headers, json=payload)
-        if res.status_code == 200:
-            print("Successfully sent real-time oil prices.")
-        else:
-            print(f"Failed with Status Code: {res.status_code}")
+        print(f"Response: {res.text}")
+        print(f"Status Code: {res.status_code}")
     except Exception as e:
         print(f"Error: {e}")
 
