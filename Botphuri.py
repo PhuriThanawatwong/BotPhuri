@@ -6,7 +6,9 @@ def push_message():
     token = os.environ.get('LINE_TOKEN')
     
     # 2. ไอดีของมึงที่กูใส่ให้ตรงๆ ตามที่มึงส่งมาเลยสัส
-    user_id = 'U9ad765ea3b3a633334cea08ed77d086'
+    user_id = 'U9ad765ea3b3a633334cea08ed77d0869' 
+
+
 
     if not token:
         print("❌ Error: หา LINE_TOKEN ใน GitHub Secrets ไม่เจอว่ะเพื่อน!")
