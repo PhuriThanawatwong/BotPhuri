@@ -2,9 +2,12 @@ import requests
 import os
 
 def push_message():
-    # ดึงค่าจาก GitHub Secrets ที่มึงต้องไปตั้งชื่อให้ตรงกันนะเพื่อน
+    # 1. กุญแจ (Token) ดึงจากที่มึงตั้งไว้ใน GitHub
     token = os.environ.get('LINE_TOKEN') 
-    user_id = os.environ.get('USER_ID') 
+    
+    # 2. ไอดีมึง (กูใส่ให้ตรงๆ เลยสัส จะได้ไม่พลาด) 
+    # เอาเลขที่ขึ้นต้นด้วย U9ad76... จากหน้า Basic Settings มาใส่ตรงนี้แทนคำว่า 'ไอดีมึง'
+    user_id = os.environ.get('USER_ID') or 'U9ad765ea673449d0124e548873099999' # ใส่ ID จริงมึงลงไปในเครื่องหมายคำพูดเลยก็ได้
 
     url = "https://api.line.me/v2/bot/message/push"
     
@@ -18,7 +21,7 @@ def push_message():
         "messages": [
             {
                 "type": "text",
-                "text": "เฮ้ยภูริ! ถ้ามึงเห็นอันนี้แปลว่า Messaging API ของจริงเด้งแล้วสัส! โค้ดมึงผ่านแล้ว!"
+                "text": "สำเร็จแล้วสัสภูริ! เลิกเขียวหลอกๆ แล้วเด้งจริงซะที!"
             }
         ]
     }
