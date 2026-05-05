@@ -1,31 +1,24 @@
 import requests
 import os
-import time
 
 def get_oil_price():
-    sources = [
-        {"name": "บางจาก", "url": "https://api-v2.bangchak.co.th/api/oilprice", "type": "json_bc"},
-        {"name": "ปตท. (OR)", "url": "https://api.iservices.me/api/oil/latest", "type": "json_generic"}
-    ]
-    for source in sources:
-        try:
-            response = requests.get(source['url'], timeout=15)
-            response.raise_for_status()
-            message = f"⛽️ ราคาน้ำมันวันนี้ ({source['name']})\n"
-            message += "------------------\n"
-            if source['type'] == "json_bc":
-                data = response.json()
-                items = data['data']['items']
-                for item in items:
-                    message += f"🔹 {item['type']}: {item['price']} บาท\n"
-            else:
-                data = response.json()
-                for item in data['data']:
-                    message += f"🔹 {item['type']}: {item['price']} บาท\n"
-            return message
-        except Exception:
-            continue
-    return "❌ ไม่สามารถดึงข้อมูลได้"
+    # ใช้ API กลางที่รวมราคาน้ำมันทุกยี่ห้อ (รวมบางจากด้วย)
+    url = "https://api.chnwt.dev/thai-oil-api/latest"
+    try:
+        response = requests.get(url, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        
+        # ดึงข้อมูลของบางจากมาแสดงตามที่คุณ Phuri ชอบ
+        bangchak = data['price']['bangchak']
+        
+        message = "⛽️ ราคาน้ำมันบางจากวันนี้\n"
+        message += "------------------\n"
+        for type, price in bangchak.items():
+            message += f"🔹 {type}: {price} บาท\n"
+        return message
+    except Exception:
+        return "❌ ระบบดึงข้อมูลขัดข้องชั่วคราว ลองใหม่อีกครั้งนะครับ"
 
 def broadcast_to_line(token, text_message):
     line_url = "https://api.line.me/v2/bot/message/broadcast"
