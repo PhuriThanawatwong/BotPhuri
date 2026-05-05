@@ -48,7 +48,9 @@ def get_realtime_oil_prices():
 def push_message():
     token = os.environ.get('LINE_TOKEN')
     # ใช้ ID ของมึงที่เช็คแล้วว่าครบ 33 ตัว
-    user_id = 'U9ad765ea3b3a633334cea08ed77d086' 
+    user_id = 'U9ad765ea3b3a633334cea08ed77d0869
+
+' 
 
     if not token:
         print("Error: LINE_TOKEN not found.")
