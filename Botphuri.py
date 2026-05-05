@@ -2,12 +2,14 @@ import requests
 import os
 
 def push_message():
-    # ดึงค่าจาก GitHub Secrets ที่เราตั้งชื่อไว้ใน main.yml
+    # 1. ดึงกุญแจ (Token) จาก GitHub Secrets ที่มึงตั้งชื่อว่า LINE_TOKEN
     token = os.environ.get('LINE_TOKEN')
-    user_id = os.environ.get('USER_ID')
+    
+    # 2. ไอดีของมึงที่กูใส่ให้ตรงๆ ตามที่มึงส่งมาเลยสัส
+    user_id = 'U9ad765ea3b3a633334cea08ed77d086'
 
-    if not token or not user_id:
-        print("❌ Error: หา LINE_TOKEN หรือ USER_ID ไม่เจอในระบบสัส!")
+    if not token:
+        print("❌ Error: หา LINE_TOKEN ใน GitHub Secrets ไม่เจอว่ะเพื่อน!")
         return
 
     url = "https://api.line.me/v2/bot/message/push"
@@ -22,7 +24,7 @@ def push_message():
         "messages": [
             {
                 "type": "text",
-                "text": "สำเร็จแล้วสัสภูริ! เลิกเขียวหลอกๆ แล้วเด้งจริงซะที! ยินดีด้วยไอ้ชาย!"
+                "text": "เชี่ย... เด้งแล้วววว! ยินดีด้วยสัสภูริ มึงทำสำเร็จแล้วโว้ยยย! 🎉"
             }
         ]
     }
