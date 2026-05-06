@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   schedule:
     # เวลา 18:28 น. ของไทย คือ 11:28 น. ของเวลา UTC
-    - cron: '28 11 * * *'
+    - cron: '30 22 * * *'
 jobs:
   run-bot:
     runs-on: ubuntu-latest
