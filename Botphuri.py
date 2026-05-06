@@ -3,7 +3,6 @@ import os
 
 def get_realtime_oil_prices():
     try:
-        # API สำรอง (เผื่อตัวหลักมีปัญหา)
         url = "https://www.bangchak.co.th/api/oilprice"
         response = requests.get(url, timeout=20)
         res_data = response.json()
@@ -15,7 +14,6 @@ def get_realtime_oil_prices():
         message = "⛽ ราคาน้ำมันวันนี้ (อัปเดตล่าสุด)\n"
         message += "--------------------------\n"
         
-        # ดึงมาเฉพาะตัวหลักที่มึงใช้บ่อยๆ (ดักด้วย ProductId)
         target_ids = {
             '14': 'Hi Premium 97',
             '1': 'Gasohol 95',
@@ -27,19 +25,15 @@ def get_realtime_oil_prices():
         for item in items:
             p_id = str(item.get('ProductId', ''))
             if p_id in target_ids:
-                # ดักทุก Key ที่น่าจะเป็นราคา (Pricetoday หรือ Price)
-                price = item.get('Pricetoday') or item.get('Price')
+                # พยายามดึงราคาจากทุกช่องที่มีความเป็นไปได้
+                price = item.get('Pricetoday') or item.get('Priceyesterday') or item.get('Price')
                 
-                # ถ้ามีราคา และราคาไม่เป็น 0
-                if price and str(price) != "0" and str(price) != "0.0":
+                if price and str(price) not in ["0", "0.0", "None"]:
                     message += f"{target_ids[p_id]}: {price} บาท\n"
                     found_count += 1
         
         if found_count == 0:
-            # ถ้าหาไม่เจอจริงๆ ให้ลองดึงตัวแรกๆ มาโชว์เลย จะได้รู้ว่า API ส่งอะไรมา
-            message += "⚠️ ไม่พบราคาปัจจุบัน (กำลังตรวจสอบ...)\n"
-            for item in items[:3]:
-                message += f"• {item.get('ProductNameEn')}: {item.get('Pricetoday')} บาท\n"
+            return "⛽ API ยังไม่ปล่อยราคา (ลองเช็กอีกทีช่วงเช้ามืด)"
             
         message += "--------------------------\n"
         message += "รายงานโดย: Bot Phuri"
@@ -49,7 +43,7 @@ def get_realtime_oil_prices():
 
 def push_message():
     token = os.environ.get('LINE_TOKEN')
-    user_id = 'U9ad765ea3b3a633334cea08ed77d0869' # ไอดีภูริ
+    user_id = os.environ.get('USER_ID') or 'U9ad765ea3b3a633334cea08ed77d0869'
 
     if not token: return
 
