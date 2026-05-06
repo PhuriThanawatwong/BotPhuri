@@ -2,7 +2,8 @@ name: Daily Oil Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 22 * * *'
+    # เวลา 18:28 น. ของไทย คือ 11:28 น. ของเวลา UTC
+    - cron: '28 11 * * *'
 jobs:
   run-bot:
     runs-on: ubuntu-latest
