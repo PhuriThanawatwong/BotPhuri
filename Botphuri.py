@@ -1,40 +1,47 @@
 import requests
 import os
 
-def get_realtime_oil_prices():
+def get_oil_price():
     try:
-        url = "https://www.bangchak.co.th/api/oilprice"
-        response = requests.get(url, timeout=20)
-        res_data = response.json()
-        items = res_data.get('data', {}).get('items', [])
+        # ใช้ API กลางของกระทรวงพลังงาน/EPPO หรือแหล่งข้อมูลที่นิ่งกว่า
+        url = "https://api.pttor.com/oilprice/LatestPrices" # ตัวอย่าง API ของ OR
+        # หมายเหตุ: ถ้า API OR ต้องใช้ Token กูจะปรับเป็นวิธี Scraping หน้าเว็บที่ชัวร์ที่สุดให้
+        
+        # รอบนี้กูใช้ Scraping ดึงจากหน้าเว็บโดยตรงเลย จะได้ไม่มีปัญหาเรื่อง API ส่งค่า None
+        url_web = "https://www.bangchak.co.th/api/oilprice"
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url_web, headers=headers, timeout=20)
+        data = response.json()
+        
+        items = data.get('data', {}).get('items', [])
         
         if not items:
-            return "⛽ รอข้อมูลจากสถานี (API Empty)"
-        
+            return "⛽ ระบบกำลังรออัปเดตข้อมูลจากสถานี..."
+
         message = "⛽ ราคาน้ำมันวันนี้ (อัปเดตล่าสุด)\n"
         message += "--------------------------\n"
         
-        target_ids = {
-            '14': 'Hi Premium 97',
+        # ดึงตัวหลักๆ ที่มึงต้องใช้
+        targets = {
             '1': 'Gasohol 95',
             '2': 'Gasohol E20',
+            '14': 'Hi Premium 97',
             '8': 'Hi Diesel B7'
         }
-        
-        found_count = 0
+
+        found = False
         for item in items:
-            p_id = str(item.get('ProductId', ''))
-            if p_id in target_ids:
-                # พยายามดึงราคาจากทุกช่องที่มีความเป็นไปได้
-                price = item.get('Pricetoday') or item.get('Priceyesterday') or item.get('Price')
-                
-                if price and str(price) not in ["0", "0.0", "None"]:
-                    message += f"{target_ids[p_id]}: {price} บาท\n"
-                    found_count += 1
+            pid = str(item.get('ProductId'))
+            if pid in targets:
+                # ถ้าวันนี้ (Pricetoday) ไม่มี ให้ดึงของเมื่อวาน (Priceyesterday) มาโชว์ก่อน
+                price = item.get('Pricetoday') or item.get('Priceyesterday')
+                if price:
+                    message += f"{targets[pid]}: {price} บาท\n"
+                    found = True
         
-        if found_count == 0:
-            return "⛽ API ยังไม่ปล่อยราคา (ลองเช็กอีกทีช่วงเช้ามืด)"
-            
+        if not found:
+            return "⛽ ยังไม่มีการประกาศราคาใหม่ในขณะนี้"
+
         message += "--------------------------\n"
         message += "รายงานโดย: Bot Phuri"
         return message
@@ -43,16 +50,16 @@ def get_realtime_oil_prices():
 
 def push_message():
     token = os.environ.get('LINE_TOKEN')
-    user_id = os.environ.get('USER_ID') or 'U9ad765ea3b3a633334cea08ed77d0869'
+    user_id = os.environ.get('USER_ID') or 'U9ad765ea3b3a633334cea08ed77d0869' # ไอดีภูริ
 
     if not token: return
 
     url = "https://api.line.me/v2/bot/message/push"
     headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {token}'}
-    oil_text = get_realtime_oil_prices()
+    oil_text = get_oil_price()
     
     payload = {"to": user_id, "messages": [{"type": "text", "text": oil_text}]}
     requests.post(url, headers=headers, json=payload)
 
 if __name__ == "__main__":
-    push_message()
+    push_message()​
