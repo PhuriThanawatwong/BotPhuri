@@ -1,61 +1,57 @@
 import requests
 import os
+import re
 
-def get_oil_price():
-    targets = ["Gasohol 95", "Gasohol E20", "Super Power Gasohol 95", "Diesel B7"]
+def get_gold_price():
     headers = {'User-Agent': 'Mozilla/5.0'}
+    url = "https://thai-gold-api.vercel.app/latest" # แหล่งข้อมูลราคาทองสมาคมฯ
     
     try:
-        res = requests.get("https://orapiweb.pttor.com/api/oilprice/LatestPrices", headers=headers, timeout=15)
+        res = requests.get(url, headers=headers, timeout=15)
         if res.status_code == 200:
             data = res.json()
-            message = "⛽ รายงานราคาน้ำมันล่าสุด\n--------------------------\n"
-            found = False
-            for item in data:
-                name = item.get('productName')
-                price = item.get('price')
-                if name in targets and price:
-                    message += f"{name}: {price} บาท\n"
-                    found = True
-            if found:
-                return message + "--------------------------\nระบบรายงานอัตโนมัติ"
-    except:
+            # ดึงข้อมูลจาก JSON (โครงสร้างของสมาคมค้าทองคำ)
+            gold_bar = data.get('response', {}).get('gold_bar', {})
+            gold_ornament = data.get('response', {}).get('gold', {})
+            update_time = data.get('response', {}).get('date', 'ไม่ระบุเวลา')
+
+            message = f"💰 รายงานราคาทองคำวันนี้\n📅 {update_time}\n"
+            message += "--------------------------\n"
+            message += f"🏆 ทองแท่ง\nรับซื้อ: {gold_bar.get('buy', '-')} บาท\nขายออก: {gold_bar.get('sell', '-')} บาท\n\n"
+            message += f"💍 ทองรูปพรรณ\nรับซื้อ: {gold_ornament.get('buy', '-')} บาท\nขายออก: {gold_ornament.get('sell', '-')} บาท\n"
+            message += "--------------------------\nระบบรายงานอัตโนมัติ"
+            return message
+    except Exception as e:
+        print(f"Error: {e}")
         pass
 
-    try:
-        res = requests.get("https://www.bangchak.co.th/api/oilprice", headers=headers, timeout=15)
-        if res.status_code == 200:
-            data = res.json()
-            items = data.get('data', {}).get('items', [])
-            message = "⛽ รายงานราคาน้ำมันล่าสุด\n--------------------------\n"
-            found = False
-            bcp_targets = {'1': 'Gasohol 95', '2': 'Gasohol E20', '14': 'Hi Premium 97', '8': 'Hi Diesel B7'}
-            for item in items:
-                pid = str(item.get('ProductId'))
-                price = item.get('Pricetoday') or item.get('Priceyesterday')
-                if pid in bcp_targets and price:
-                    message += f"{bcp_targets[pid]}: {price} บาท\n"
-                    found = True
-            if found:
-                return message + "--------------------------\nระบบรายงานอัตโนมัติ"
-    except:
-        pass
-
-    return "⛽ ขออภัย: ระบบไม่สามารถดึงข้อมูลราคาน้ำมันได้ในขณะนี้ โปรดตรวจสอบอีกครั้งภายหลัง"
+    return "💰 ขออภัย: ไม่สามารถดึงข้อมูลราคาทองได้ในขณะนี้"
 
 def push_message():
     token = os.environ.get('LINE_TOKEN')
+    # ใช้ USER_ID จาก Secret หรือค่า Default (เช็กให้ตรงกับของมึงนะสัส)
     user_id = os.environ.get('USER_ID') or 'U9ad765ea3b3a633334cea08ed77d0869'
+    
     if not token:
+        print("Error: LINE_TOKEN not found")
         return
-    oil_text = get_oil_price()
+        
+    text_content = get_gold_price()
     url = "https://api.line.me/v2/bot/message/push"
-    headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {token}'}
-    payload = {"to": user_id, "messages": [{"type": "text", "text": oil_text}]}
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {token}'
+    }
+    payload = {
+        "to": user_id,
+        "messages": [{"type": "text", "text": text_content}]
+    }
+    
     try:
-        requests.post(url, headers=headers, json=payload, timeout=10)
-    except:
-        pass
+        r = requests.post(url, headers=headers, json=payload, timeout=10)
+        print(f"Status: {r.status_code}")
+    except Exception as e:
+        print(f"Send Error: {e}")
 
 if __name__ == "__main__":
     push_message()
