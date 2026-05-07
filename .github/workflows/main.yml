@@ -2,7 +2,7 @@ name: Botphuri Gold Daily
 
 on:
   schedule:
-    - cron: '00 2 * * *'  # รันทุกวันเวลา 01:51 UTC (เท่ากับ 08:51 ไทย)
+    - cron: '30 22 * * *'  # รันทุกวันเวลา 22:30 UTC (เท่ากับ 05:30 ไทย)
   workflow_dispatch:      # ปุ่มกดรันเองเอาไว้เทสต์
 
 jobs:
