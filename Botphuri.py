@@ -15,8 +15,7 @@ def get_gold_data():
     return None, None
 
 def create_flex_message(g, date):
-    # นี่คือโครงสร้าง JSON ของ Flex Message ที่จะทำให้หน้าตาเหมือนรูปที่มึงส่งมา
-    flex_content = {
+    return {
         "type": "bubble",
         "body": {
             "type": "box",
@@ -52,29 +51,25 @@ def create_flex_message(g, date):
             ]
         }
     }
-    return flex_content
 
 def push_message():
     token = os.environ.get('LINE_TOKEN')
-    user_id = os.environ.get('USER_ID') or 'U9ad765ea3b3a633334cea08ed77d0869'
-    if not token: return
+    if not token:
+        return
     
     g_data, update_time = get_gold_data()
-    if not g_data: return
+    if not g_data:
+        return
     
-    url = "https://api.line.me/v2/bot/message/push"
+    url = "https://api.line.me/v2/bot/message/broadcast"
     headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {token}'}
-    
-    # เปลี่ยนจากส่ง 'text' เป็นส่ง 'flex'
     payload = {
-        "to": user_id,
         "messages": [{
             "type": "flex",
-            "altText": "รายงานราคาทองคำล่าสุด",
+            "altText": "Gold Price Update",
             "contents": create_flex_message(g_data, update_time)
         }]
     }
-    
     requests.post(url, headers=headers, json=payload, timeout=10)
 
 if __name__ == "__main__":
