@@ -1,0 +1,23 @@
+name: Air Quality Daily
+
+on:
+  schedule:
+    - cron: '00 23 * * *'  # 06:00 น. เวลาไทย
+  workflow_dispatch:      # กดรันเองได้
+
+jobs:
+  run-air:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run Air Bot
+        env:
+          LINE_TOKEN_AIR: ${{ secrets.LINE_TOKEN_AIR }}
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+          USER_ID: ${{ secrets.USER_ID }}
+        run: python BotAir.py
