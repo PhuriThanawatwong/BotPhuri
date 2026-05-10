@@ -1,6 +1,9 @@
+import os
+import requests
+
 def get_air_data():
     api_key = os.environ.get('WEATHER_API_KEY')
-    lat, lon = 13.59, 100.95 # พิกัดบางสมัคร
+    lat, lon = 13.59, 100.95 # บางสมัคร
     url = f"https://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={api_key}"
     
     try:
@@ -23,3 +26,15 @@ def get_air_data():
         return msg
     except:
         return "⚠️ ระบบตรวจสอบอากาศขัดข้อง"
+
+def send_line(message):
+    token = os.environ.get('LINE_TOKEN_AIR')
+    user_id = os.environ.get('USER_ID')
+    url = 'https://api.line.me/v2/bot/message/push'
+    headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {token}'}
+    data = {'to': user_id, 'messages': [{'type': 'text', 'text': message}]}
+    requests.post(url, headers=headers, json=data)
+
+if __name__ == "__main__":
+    msg = get_air_data()
+    send_line(msg)
